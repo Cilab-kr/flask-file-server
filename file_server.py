@@ -214,7 +214,6 @@ class PathView(MethodView):
                 try:
                     filename = secure_filename(os.path.basename(path))
                     os.remove(os.path.join(dir_path, filename))
-                    os.rmdir(dir_path)
                 except Exception as e:
                     info['status'] = 'error'
                     info['msg'] = str(e)
