@@ -1,6 +1,6 @@
 from flask import Flask, make_response, request, session, render_template, send_file, Response
 from flask.views import MethodView
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 from datetime import datetime
 import humanize
 import os
@@ -116,15 +116,16 @@ class PathView(MethodView):
                 filepath = os.path.join(path, filename)
                 stat_res = os.stat(filepath)
                 info = {}
-                info['name'] = filename
-                info['mtime'] = stat_res.st_mtime
-                ft = get_type(stat_res.st_mode)
-                info['type'] = ft
-                total[ft] += 1
-                sz = stat_res.st_size
-                info['size'] = sz
-                total['size'] += sz
-                contents.append(info)
+                if request.cookies.get('auth_cookie') == key:
+                    info['name'] = filename
+                    info['mtime'] = stat_res.st_mtime
+                    ft = get_type(stat_res.st_mode)
+                    info['type'] = ft
+                    total[ft] += 1
+                    sz = stat_res.st_size
+                    info['size'] = sz
+                    total['size'] += sz
+                    contents.append(info)
             page = render_template('index.html', path=p, contents=contents, total=total, hide_dotfile=hide_dotfile)
             res = make_response(page, 200)
             res.set_cookie('hide-dotfile', hide_dotfile, max_age=16070400)
@@ -202,8 +203,9 @@ class PathView(MethodView):
         return res
     
     def delete(self, p=''):
+        filename = request.form["filename"]
         if request.cookies.get('auth_cookie') == key:
-            path = os.path.join(root, p)
+            path = os.path.join(root, p, filename)
             dir_path = os.path.dirname(path)
             Path(dir_path).mkdir(parents=True, exist_ok=True)
 
