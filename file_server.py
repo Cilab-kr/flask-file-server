@@ -15,8 +15,11 @@ app = Flask(__name__, static_url_path='/assets', static_folder='assets')
 root = os.path.normpath("/tmp")
 key = ""
 
+MB = 1 << 20
+BUFF_SIZE = 10 * MB
+
 ignored = ['.bzr', '$RECYCLE.BIN', '.DAV', '.DS_Store', '.git', '.hg', '.htaccess', '.htpasswd', '.Spotlight-V100', '.svn', '__MACOSX', 'ehthumbs.db', 'robots.txt', 'Thumbs.db', 'thumbs.tps']
-datatypes = {'audio': 'm4a,mp3,oga,ogg,webma,wav', 'archive': '7z,zip,rar,gz,tar', 'image': 'gif,ico,jpe,jpeg,jpg,png,svg,webp', 'pdf': 'pdf', 'quicktime': '3g2,3gp,3gp2,3gpp,mov,qt', 'source': 'atom,bat,bash,c,cmd,coffee,css,hml,js,json,java,less,markdown,md,php,pl,py,rb,rss,sass,scpt,swift,scss,sh,xml,yml,plist', 'text': 'txt', 'video': 'mp4,m4v,ogv,webm', 'website': 'htm,html,mhtm,mhtml,xhtm,xhtml'}
+datatypes = {'audio': 'm4a,mp3,oga,ogg,webma,wav', 'archive': '7z,zip,rar,gz,tar', 'image': 'gif,ico,jpe,jpeg,jpg,png,svg,webp', 'pdf': 'pdf', 'quicktime': '3g2,3gp,3gp2,3gpp,mov,qt', 'source': 'atom,bat,bash,c,cmd,coffee,css,hml,js,json,java,less,markdown,md,php,pl,py,rb,rss,sass,scpt,swift,scss,sh,xml,yml,plist', 'text': 'txt,csv', 'video': 'mp4,m4v,ogv,webm,avi', 'website': 'htm,html,mhtm,mhtml,xhtm,xhtml'}
 icontypes = {'fa-music': 'm4a,mp3,oga,ogg,webma,wav', 'fa-archive': '7z,zip,rar,gz,tar', 'fa-picture-o': 'gif,ico,jpe,jpeg,jpg,png,svg,webp', 'fa-file-text': 'pdf', 'fa-film': '3g2,3gp,3gp2,3gpp,mov,qt', 'fa-code': 'atom,plist,bat,bash,c,cmd,coffee,css,hml,js,json,java,less,markdown,md,php,pl,py,rb,rss,sass,scpt,swift,scss,sh,xml,yml', 'fa-file-text-o': 'txt', 'fa-film': 'mp4,m4v,ogv,webm', 'fa-globe': 'htm,html,mhtm,mhtml,xhtm,xhtml'}
 
 @app.template_filter('size_fmt')
@@ -61,8 +64,9 @@ def partial_response(path, start, end=None):
     file_size = os.path.getsize(path)
 
     if end is None:
-        end = file_size - start - 1
+        end = start + BUFF_SIZE - 1
     end = min(end, file_size - 1)
+    end = min(end, start + BUFF_SIZE - 1)
     length = end - start + 1
 
     with open(path, 'rb') as fd:
@@ -108,7 +112,7 @@ class PathView(MethodView):
         if os.path.isdir(path):
             contents = []
             total = {'size': 0, 'dir': 0, 'file': 0}
-            for filename in os.listdir(path):
+            for filename in sorted(os.listdir(path), reverse=True):
                 if filename in ignored:
                     continue
                 if hide_dotfile == 'yes' and filename[0] == '.':
