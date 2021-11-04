@@ -171,17 +171,23 @@
   <script type="text/javascript" src="{{url_for('static', filename='js/custom.js')}}"></script>
   <script language="javascript" type="text/javascript">
     function makeDELETErequest() {
-      var r = confirm("Sure to delete?")
-      var filename = $("#file-name").html()
-      $.ajax({
-        url: "#",
-        data: { "filename": filename },
-        type: "DELETE",
-        success: function (result) {
-          alert(filename + "\ Deleted!");
-          location.reload();
-        }
-      });
+      if (r = confirm("Sure to delete?")){
+        var filename = $("#file-name").html()
+        $.ajax({
+          url: "#",
+          data: { "filename": filename },
+          type: "DELETE",
+          success: function (result) {
+            alert(filename + "\ Deleted!");
+            location.reload();
+          }
+        });
+        return true;
+      }
+      else {
+        alert("Canceled");
+        return false;
+      }
     };
   </script>
 
